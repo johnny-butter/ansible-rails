@@ -1,0 +1,30 @@
+- name: Create ruby-install directory
+  file: path=/root/ruby-install state=directory
+
+- name: Download and unpack postmodern/ruby-install
+  unarchive:
+    src: "https://github.com/postmodern/ruby-install/archive/v{{ ruby_install_version }}.tar.gz"
+    dest: /root/ruby-install/
+    remote_src: true
+
+- name: Install ruby-install
+  make: chdir=/root/ruby-install/ruby-install-{{ ruby_install_version }} target=install
+
+- name: Install the specific Ruby version
+  command: ruby-install ruby {{ ruby_version }}
+  when: rubies_installed.stat.isdir is not defined
+
+- name: Find all files in ruby-{{ ruby_version }}/bin
+  find:
+    paths: /opt/rubies/ruby-2.4.1/bin
+  register: find
+
+- name: Alternatives ruby
+  alternatives:
+    link: /usr/bin/{{ item.path | basename }}
+    name: "{{ item.path | basename }}"
+    path: "{{ item.path }}"
+  with_items: "{{ find.files }}"
+
+- name: Install Bundler
+  gem: name=bundler

@@ -1,0 +1,19 @@
+# System
+ubuntu_version:
+
+# MySQL
+mysql_version:
+mysql_root_db_password:
+mysql_db_name:
+
+# Ruby
+ruby_install_version:
+ruby_version:
+
+# Nginx
+nginx_server_hostname:
+nginx_app_name:
+nginx_https_enabled:
+
+# General settings
+deploy_dir:
