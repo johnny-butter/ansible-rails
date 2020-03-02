@@ -1,0 +1,52 @@
+- name: Install MySQL dependency
+  apt: name={{ item }} state=latest update_cache=true cache_valid_time=3600
+  with_items:
+    - python-mysqldb
+    - libmysqlclient-dev
+
+# https://dev.mysql.com/doc/mysql-apt-repo-quick-guide/en/
+# Add MySQL GPG Public key to install mysql from mysql repository
+- name: Add GPG Public key
+  apt_key:
+    keyserver: hkp://pgp.mit.edu:80
+    id: 5072E1F5
+
+- name: Add official APT repository
+  apt_repository:
+    repo: "deb http://repo.mysql.com/apt/ubuntu {{ ubuntu_version }} mysql-{{ mysql_version }}"
+
+# Install mysql
+- name: Install mysql-server
+  apt: name="{{item}}" state=present update_cache=true
+  with_items:
+    - mysql-server
+    - mysql-client
+
+# Mysql setup
+- name: Ensure MySQL service is up
+  service: name=mysql state=started
+
+- name: copy .my.cnf file with root password credentials
+  template:
+    src=templates/my.cnf
+    dest=/root/.my.cnf
+    owner=root
+    mode=0600
+
+- name: Update MySQL root password for all root accounts
+  mysql_user: name=root
+              host={{ item }}
+              password={{ mysql_root_db_password }}
+  with_items:
+    - 127.0.0.1
+    - ::1
+    - localhost
+
+- name: Ensure anonymous users are not in the database
+  mysql_user: name='' host=localhost state=absent
+
+- name: Remove test database
+  mysql_db: name=test state=absent
+
+- name: Create MySQL Database
+  mysql_db: name={{ mysql_db_name }} encoding=utf8mb4
