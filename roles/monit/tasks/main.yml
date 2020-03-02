@@ -1,0 +1,9 @@
+- name: Install monit
+  apt: name=monit
+
+- name: Set monitrc
+  template:
+    src=templates/monitrc
+    dest=/etc/monit/monitrc
+    owner=root
+    mode=0700
