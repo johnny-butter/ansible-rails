@@ -3,7 +3,7 @@
 
 - name: Copy nginx config file
   template:
-    src=templates/nginx_simple_config
+    src=templates/{{ nginx_app_name }}
     dest=/etc/nginx/sites-available/{{ nginx_app_name }}
 
 - name: Enable configuration

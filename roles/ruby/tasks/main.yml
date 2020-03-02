@@ -8,23 +8,31 @@
     remote_src: true
 
 - name: Install ruby-install
-  make: chdir=/root/ruby-install/ruby-install-{{ ruby_install_version }} target=install
+  make:
+    chdir=/root/ruby-install/ruby-install-{{ ruby_install_version }}
+    target=install
 
-- name: Install the specific Ruby version
-  command: ruby-install ruby {{ ruby_version }}
-  when: rubies_installed.stat.isdir is not defined
+- block:
+  - name: Install the specific Ruby version
+    command: ruby-install ruby {{ ruby_version }}
 
-- name: Find all files in ruby-{{ ruby_version }}/bin
-  find:
-    paths: /opt/rubies/ruby-2.4.1/bin
-  register: find
+  - name: Install Bundler
+    gem:
+      name=bundler
+      version=1.11.2
+      executable=~/.rubies/ruby-{{ ruby_version }}/bin/gem
+      user_install=no
 
-- name: Alternatives ruby
-  alternatives:
-    link: /usr/bin/{{ item.path | basename }}
-    name: "{{ item.path | basename }}"
-    path: "{{ item.path }}"
-  with_items: "{{ find.files }}"
+  - name: Find all files in ruby-{{ ruby_version }}/bin
+    find:
+      paths: ~/.rubies/ruby-{{ ruby_version }}/bin
+    register: ruby_bin_files
 
-- name: Install Bundler
-  gem: name=bundler
+  become: false
+
+- name: Add ruby to bin path
+  file:
+    src="{{ item.path }}"
+    dest=/usr/local/bin/{{ item.path | basename }}
+    state=link
+  with_items: "{{ ruby_bin_files.files }}"

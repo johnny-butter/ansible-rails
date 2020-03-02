@@ -1,7 +1,7 @@
 - name: Install MySQL dependency
   apt: name={{ item }} state=latest update_cache=true cache_valid_time=3600
   with_items:
-    - python-mysqldb
+    - python3-mysqldb
     - libmysqlclient-dev
 
 # https://dev.mysql.com/doc/mysql-apt-repo-quick-guide/en/
@@ -22,6 +22,13 @@
     - mysql-server
     - mysql-client
 
+- name: Bind MySQL address
+  ini_file:
+    dest=/etc/mysql/mysql.conf.d/mysqld.cnf
+    section=mysqld
+    option=bind-address
+    value=0.0.0.0
+
 # Mysql setup
 - name: Ensure MySQL service is up
   service: name=mysql state=started
@@ -34,13 +41,21 @@
     mode=0600
 
 - name: Update MySQL root password for all root accounts
-  mysql_user: name=root
-              host={{ item }}
-              password={{ mysql_root_db_password }}
+  mysql_user:
+    name=root
+    host={{ item }}
+    password={{ mysql_root_db_password }}
   with_items:
     - 127.0.0.1
     - ::1
     - localhost
+
+- name: Create MySQL User
+  mysql_user:
+    name=root
+    password="{{ mysql_root_db_password }}"
+    host="%"
+    priv=*.*:ALL
 
 - name: Ensure anonymous users are not in the database
   mysql_user: name='' host=localhost state=absent
