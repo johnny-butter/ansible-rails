@@ -13,7 +13,3 @@ ruby_version:
 # Nginx
 nginx_server_hostname:
 nginx_app_name:
-nginx_https_enabled:
-
-# General settings
-deploy_dir:
